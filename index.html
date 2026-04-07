@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPKLU Equity Research — Pathways to Sustainable Transportation Indonesia</title>
+<meta name="description" content="Spatial equity & public perception of EV charging infrastructure (SPKLU) in Indonesia. Research proposal aligned with RACE for 2030.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>⚡</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  :root {
+    --ink: #0f1410;
+    --paper: #fafaf7;
+    --paper-warm: #f5f3ec;
+    --green-deep: #0d3b22;
+    --green-mid: #2d6a3e;
+    --green-leaf: #4a8c5a;
+    --highlight: #f4d35e;
+    --red-flag: #c1432a;
+    --red-soft: #e07a55;
+    --blue-cool: #335c81;
+    --muted: #6b7268;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100vh; overflow: hidden; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  header {
+    padding: 16px 36px;
+    border-bottom: 1px solid rgba(15,20,16,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  header .brand {
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  header .brand .dot {
+    width: 9px; height: 9px;
+    background: var(--highlight);
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+  }
+  header .brand .sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    font-weight: 500;
+    margin-left: 6px;
+  }
+  header .researcher {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  header .researcher strong {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    text-transform: none;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    font-weight: 500;
+    margin-left: 8px;
+  }
+
+  /* TABS */
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 2px solid var(--ink);
+    flex-shrink: 0;
+  }
+  .tab {
+    padding: 18px 24px;
+    background: transparent;
+    border: none;
+    border-right: 1px solid rgba(15,20,16,0.1);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.25s;
+    font-family: inherit;
+  }
+  .tab:last-child { border-right: none; }
+  .tab:hover { background: var(--paper-warm); }
+  .tab.active { background: var(--ink); color: var(--paper); }
+  .tab .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--green-mid);
+    margin-bottom: 5px;
+  }
+  .tab.active .num { color: var(--highlight); }
+  .tab .label {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .tab .method-pill {
+    display: block;
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .tab.active .method-pill { color: rgba(244,211,94,0.7); }
+
+  /* CONTENT */
+  .content { flex: 1; overflow: hidden; position: relative; }
+  .panel {
+    position: absolute;
+    inset: 0;
+    padding: 28px 40px;
+    display: none;
+  }
+  .panel.active { display: block; }
+  .panel-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 36px;
+    height: 100%;
+  }
+  .panel-left {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+  .panel-left h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+  }
+  .panel-left h2 em {
+    font-style: italic;
+    color: var(--green-deep);
+  }
+  .panel-left .lead {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+    margin-bottom: 18px;
+  }
+  .source-cite {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    padding: 6px 10px;
+    background: var(--paper-warm);
+    border-left: 2px solid var(--green-mid);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .source-cite strong { color: var(--green-deep); font-weight: 600; }
+  .panel-left .takeaway {
+    margin-top: auto;
+    padding: 16px 18px;
+    background: var(--paper-warm);
+    border-left: 3px solid var(--highlight);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .panel-left .takeaway strong {
+    display: block;
+    font-family: 'Fraunces', serif;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--green-deep);
+  }
+  .panel-right {
+    background: var(--paper-warm);
+    border-radius: 4px;
+    padding: 22px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .panel-right .vis-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 14px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .panel-right .vis-title .meta {
+    font-size: 9px;
+    color: var(--green-mid);
+  }
+
+  /* PANEL 1 — Leaflet satellite map */
+  #idMap {
+    flex: 1;
+    border-radius: 3px;
+    background: #1a2a3a;
+    min-height: 0;
+  }
+  .leaflet-container {
+    background: #1a2a3a;
+    font-family: 'Inter', sans-serif;
+  }
+  .leaflet-popup-content-wrapper {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 3px;
+    padding: 0;
+  }
+  .leaflet-popup-content {
+    margin: 14px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--paper);
+  }
+  .leaflet-popup-content .pop-name {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .leaflet-popup-content .pop-ratio {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    color: var(--highlight);
+    font-weight: 600;
+    margin: 6px 0;
+  }
+  .leaflet-popup-content .pop-source {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: rgba(250,250,247,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+  }
+  .leaflet-popup-tip { background: var(--ink); }
+  .leaflet-popup-close-button { color: rgba(250,250,247,0.6) !important; }
+
+  .map-attr {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px !important;
+    color: rgba(250,250,247,0.6);
+    background: rgba(15,20,16,0.7) !important;
+    padding: 3px 8px !important;
+  }
+
+  .gini-row {
+    display: flex;
+    gap: 18px;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+  .gini-row .ginbig {
+    font-family: 'Fraunces', serif;
+    font-size: 36px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--red-flag);
+  }
+  .gini-row .ginlbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .gini-row .ginlbl strong {
+    display: block;
+    color: var(--ink);
+    font-size: 11px;
+    margin-bottom: 2px;
+    font-weight: 600;
+  }
+
+  /* PANEL 2 — NLP Pipeline */
+  #panel2 .pipeline-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 6px;
+  }
+  .source-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .src-card {
+    background: var(--paper);
+    border: 1px solid rgba(15,20,16,0.1);
+    border-radius: 3px;
+    padding: 14px 16px;
+    transition: all 0.2s;
+  }
+  .src-card:hover {
+    border-color: var(--green-mid);
+    transform: translateY(-1px);
+  }
+  .src-card .src-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .src-card .src-name {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .src-card .src-target {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--green-mid);
+    font-weight: 600;
+  }
+  .src-card .src-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .src-card .src-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--blue-cool);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    word-break: break-all;
+  }
+  .src-card .src-link:hover { text-decoration: underline; }
+
+  .pipeline-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .pipe-step {
+    flex: 1;
+    min-width: 100px;
+    background: var(--paper);
+    border: 1px solid rgba(15,20,16,0.1);
+    border-radius: 3px;
+    padding: 12px 12px;
+    text-align: center;
+    position: relative;
+  }
+  .pipe-step .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--green-mid);
+    margin-bottom: 4px;
+    letter-spacing: 0.1em;
+  }
+  .pipe-step .step-name {
+    font-family: 'Fraunces', serif;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--ink);
+  }
+  .pipe-step .step-tool {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .tools-section {
+    background: var(--paper);
+    border-left: 3px solid var(--green-mid);
+    padding: 12px 16px;
+    margin-bottom: 14px;
+  }
+  .tools-section h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--green-mid);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .tools-section ul {
+    list-style: none;
+    display: grid;
+    gap: 4px;
+  }
+  .tools-section li {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink);
+  }
+  .tools-section li a {
+    color: var(--blue-cool);
+    text-decoration: none;
+  }
+  .tools-section li a:hover { text-decoration: underline; }
+  .tools-section li .arrow { color: var(--green-leaf); margin-right: 6px; }
+
+  .preview-banner {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 14px;
+    border: 1px solid var(--ink);
+  }
+  .preview-banner strong { font-weight: 700; }
+
+  /* PANEL 3 — DiD chart */
+  #panel3 .chart-container {
+    flex: 1;
+    background: var(--paper);
+    border-radius: 3px;
+    padding: 16px;
+    min-height: 0;
+    position: relative;
+  }
+  .assumptions-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-shrink: 0;
+  }
+  .assumption {
+    background: var(--paper);
+    padding: 10px 12px;
+    border-radius: 3px;
+    border-left: 2px solid var(--green-leaf);
+  }
+  .assumption .a-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--green-deep);
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .assumption .a-desc {
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* PANEL 4 — Recommendations */
+  #panel4 .reco-wrap {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  #panel4 .cat-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(15,20,16,0.15);
+  }
+  #panel4 .cat-tab {
+    padding: 8px 14px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  #panel4 .cat-tab:hover { color: var(--ink); }
+  #panel4 .cat-tab.active {
+    color: var(--green-deep);
+    border-bottom-color: var(--green-deep);
+    font-weight: 600;
+  }
+  #panel4 .reco-list {
+    flex: 1;
+    background: var(--paper);
+    border-radius: 3px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  #panel4 .reco-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 70px 70px 60px 70px 60px;
+    gap: 14px;
+    padding: 12px 18px;
+    border-bottom: 1px solid rgba(15,20,16,0.06);
+    align-items: center;
+    transition: background 0.2s;
+  }
+  #panel4 .reco-row:hover { background: var(--paper-warm); }
+  #panel4 .reco-row.head {
+    background: var(--paper-warm);
+    border-bottom: 2px solid var(--ink);
+    padding: 10px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  #panel4 .reco-row .rank {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--green-deep);
+  }
+  #panel4 .reco-row .place {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.15;
+  }
+  #panel4 .reco-row .place small {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  #panel4 .reco-row .metric {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+  }
+  #panel4 .reco-row .score {
+    text-align: right;
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--green-deep);
+  }
+  #panel4 .formula {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    padding: 10px 18px;
+    background: var(--paper-warm);
+    border-top: 1px solid rgba(15,20,16,0.08);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 900px) {
+    html, body { height: auto; overflow: auto; }
+    .tabs { grid-template-columns: 1fr 1fr; border-bottom: none; }
+    .tab { border-bottom: 1px solid rgba(15,20,16,0.1); padding: 14px 16px; }
+    .tab .label { font-size: 13px; }
+    .panel { position: static; padding: 20px 16px; }
+    .panel-grid { grid-template-columns: 1fr; gap: 20px; height: auto; }
+    .panel-left h2 { font-size: 22px; }
+    .source-grid { grid-template-columns: 1fr; }
+    .pipeline-flow { flex-direction: column; }
+    #panel4 .reco-row { grid-template-columns: 32px 1fr 50px; gap: 8px; padding: 12px 14px; }
+    #panel4 .reco-row .metric { display: none; }
+    #idMap { min-height: 360px; }
+    header { padding: 12px 16px; flex-wrap: wrap; gap: 6px; }
+    header .researcher { font-size: 9px; }
+    .assumptions-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="dot"></span>
+    SPKLU<em style="font-style:italic;font-weight:400">·equity</em>
+    <span class="sub">Research Proposal · 2026</span>
+  </div>
+  <div class="researcher">Principal Investigator <strong>Qashtalani Haramaini</strong></div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="setTab(1)">
+    <div class="num">Tujuan 01</div>
+    <div class="label">Distributive Equity SPKLU</div>
+    <span class="method-pill">Gini · Lorenz · 2SFCA</span>
+  </button>
+  <button class="tab" onclick="setTab(2)">
+    <div class="num">Tujuan 02</div>
+    <div class="label">Persepsi Reliability & Akses</div>
+    <span class="method-pill">BERTopic · IndoBERT ABSA</span>
+  </button>
+  <button class="tab" onclick="setTab(3)">
+    <div class="num">Tujuan 03</div>
+    <div class="label">Variasi Spasial Urban–Rural</div>
+    <span class="method-pill">GWR · DiD · Moran's I</span>
+  </button>
+  <button class="tab" onclick="setTab(4)">
+    <div class="num">Tujuan 04</div>
+    <div class="label">Rekomendasi Kebijakan</div>
+    <span class="method-pill">Priority Site Engine</span>
+  </button>
+</div>
+
+<div class="content">
+
+  <!-- ============ PANEL 1 ============ -->
+  <div class="panel active" id="panel1">
+    <div class="panel-grid">
+      <div class="panel-left">
+        <h2>Apakah SPKLU dialokasikan secara <em>adil</em>?</h2>
+        <p class="lead">
+          Mengukur ketimpangan distribusi 3.233 SPKLU di 22 wilayah PLN — relatif terhadap populasi EV.
+          Klik marker pada peta untuk melihat detail per wilayah.
+        </p>
+        <div class="source-cite">
+          <strong>Sumber data:</strong><br>
+          PT PLN (Persero), EOI Figure 1, 2024<br>
+          Koordinat centroid: BPS · OpenStreetMap
+        </div>
+        <div class="gini-row">
+          <div class="ginbig">0.61</div>
+          <div class="ginlbl"><strong>Gini Coefficient</strong>Ketimpangan tinggi</div>
+        </div>
+        <div class="takeaway">
+          <strong>Temuan kunci</strong>
+          Banten 1:47 vs Aceh & NTT 1:1 — perbedaan 47×. Pulau Jawa menyerap mayoritas beban EV nasional sementara wilayah luar Jawa underutilised.
+        </div>
+      </div>
+      <div class="panel-right">
+        <div class="vis-title">
+          <span>Peta satelit · 22 wilayah PLN</span>
+          <span class="meta">Esri World Imagery · Hover/klik marker</span>
+        </div>
+        <div id="idMap"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PANEL 2 ============ -->
+  <div class="panel" id="panel2">
+    <div class="panel-grid">
+      <div class="panel-left">
+        <h2>Bagaimana <em>persepsi pengguna</em> dikumpulkan?</h2>
+        <p class="lead">
+          Pipeline berbasis 4 sumber data publik — diproses dengan tools NLP open-source untuk Bahasa Indonesia.
+          Total target: 60.000+ ulasan yang akan dikumpulkan pada Tahun 1 riset.
+        </p>
+        <div class="source-cite">
+          <strong>Status:</strong> Methodology preview<br>
+          Tidak ada data palsu — semua angka adalah <em>target</em>, bukan hasil
+        </div>
+        <div class="takeaway">
+          <strong>Mengapa pipeline transparan</strong>
+          Setiap tool yang dipakai punya link publik ke dokumentasi resmi. Reviewer dapat memverifikasi setiap langkah secara independen.
+        </div>
+      </div>
+      <div class="panel-right">
+        <div class="vis-title">
+          <span>4 sumber data + 5-step NLP pipeline</span>
+          <span class="meta">All sources verifiable</span>
+        </div>
+        <div class="pipeline-wrap">
+
+          <div class="source-grid">
+            <div class="src-card">
+              <div class="src-head">
+                <span class="src-name">Google Maps Reviews</span>
+                <span class="src-target">~40.000</span>
+              </div>
+              <div class="src-desc">Ulasan publik per SPKLU dari Google Places API. Mayoritas kontribusi Bahasa Indonesia.</div>
+              <a class="src-link" href="https://developers.google.com/maps/documentation/places/web-service/details" target="_blank">developers.google.com/maps/places</a>
+            </div>
+            <div class="src-card">
+              <div class="src-head">
+                <span class="src-name">PLN Mobile App</span>
+                <span class="src-target">~12.000</span>
+              </div>
+              <div class="src-desc">Ulasan Google Play Store untuk fitur SPKLU di aplikasi resmi PLN Mobile.</div>
+              <a class="src-link" href="https://play.google.com/store/apps/details?id=com.icon.pln123" target="_blank">play.google.com/store/apps/com.icon.pln123</a>
+            </div>
+            <div class="src-card">
+              <div class="src-head">
+                <span class="src-name">Twitter / X mentions</span>
+                <span class="src-target">~5.000</span>
+              </div>
+              <div class="src-desc">Mentions kata kunci "SPKLU", "charging station PLN", "ngecas mobil listrik" via API v2.</div>
+              <a class="src-link" href="https://developer.x.com/en/docs/x-api" target="_blank">developer.x.com/en/docs/x-api</a>
+            </div>
+            <div class="src-card">
+              <div class="src-head">
+                <span class="src-name">Komunitas EV Indonesia</span>
+                <span class="src-target">~3.000</span>
+              </div>
+              <div class="src-desc">Diskusi grup Facebook/forum komunitas EV (Hyundai Ioniq, Wuling Air EV, BYD Indonesia).</div>
+              <a class="src-link" href="https://www.facebook.com/groups/hyundaiioniq5indonesia" target="_blank">facebook.com/groups/hyundaiioniq5indonesia</a>
+            </div>
+          </div>
+
+          <div class="pipeline-flow">
+            <div class="pipe-step">
+              <div class="step-num">01</div>
+              <div class="step-name">Scraping</div>
+              <div class="step-tool">Playwright<br>Selenium</div>
+            </div>
+            <div class="pipe-step">
+              <div class="step-num">02</div>
+              <div class="step-name">Preprocess</div>
+              <div class="step-tool">Sastrawi<br>(stem ID)</div>
+            </div>
+            <div class="pipe-step">
+              <div class="step-num">03</div>
+              <div class="step-name">Topik</div>
+              <div class="step-tool">BERTopic<br>UMAP+HDBSCAN</div>
+            </div>
+            <div class="pipe-step">
+              <div class="step-num">04</div>
+              <div class="step-name">ABSA</div>
+              <div class="step-tool">IndoBERT<br>fine-tuned</div>
+            </div>
+            <div class="pipe-step">
+              <div class="step-num">05</div>
+              <div class="step-name">Explain</div>
+              <div class="step-tool">SHAP<br>feature imp.</div>
+            </div>
+          </div>
+
+          <div class="tools-section">
+            <h4>Open-Source Tools (verifiable)</h4>
+            <ul>
+              <li><span class="arrow">→</span><a href="https://github.com/sastrawi/sastrawi" target="_blank">github.com/sastrawi/sastrawi</a> — Indonesian stemmer</li>
+              <li><span class="arrow">→</span><a href="https://huggingface.co/indolem/indobert-base-uncased" target="_blank">huggingface.co/indolem/indobert-base-uncased</a> — Pretrained Indonesian BERT</li>
+              <li><span class="arrow">→</span><a href="https://maartengr.github.io/BERTopic/" target="_blank">maartengr.github.io/BERTopic</a> — Topic modeling framework</li>
+              <li><span class="arrow">→</span><a href="https://shap.readthedocs.io" target="_blank">shap.readthedocs.io</a> — SHAP explainability</li>
+            </ul>
+          </div>
+
+          <div class="preview-banner">
+            <strong>Methodology Preview</strong> — Aspect kategori target: Reliability · Aksesibilitas · Kecepatan charging · Harga · Layanan. Output per stasiun: skor 0–1 per aspect + topik dominan.
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PANEL 3 ============ -->
+  <div class="panel" id="panel3">
+    <div class="panel-grid">
+      <div class="panel-left">
+        <h2>Apakah ekspansi 300% <em>menggerakkan</em> adopsi EV?</h2>
+        <p class="lead">
+          Memanfaatkan ekspansi SPKLU 2023→2024 sebagai quasi-natural experiment.
+          Membandingkan kabupaten yang dapat SPKLU baru (treated) vs yang tidak (control).
+        </p>
+        <div class="source-cite">
+          <strong>Identifying strategy:</strong><br>
+          Pertumbuhan 300% SPKLU 2023→24<br>
+          PT PLN siaran pers 2024 (EOI hal. 1)
+        </div>
+        <div class="takeaway">
+          <strong>Status grafik</strong>
+          Simulasi berdasarkan tingkat pertumbuhan dari EOI. Estimasi causal effect aktual akan dihitung Y1 dengan data registrasi EV per kabupaten dari Korlantas Polri.
+        </div>
+      </div>
+      <div class="panel-right">
+        <div class="vis-title">
+          <span>Difference-in-Differences setup</span>
+          <span class="meta">Simulation · pending Y1 data</span>
+        </div>
+        <div class="assumptions-row">
+          <div class="assumption">
+            <div class="a-title">Parallel Trends</div>
+            <div class="a-desc">Treated & control mengikuti tren serupa pre-2023</div>
+          </div>
+          <div class="assumption">
+            <div class="a-title">No Spillover</div>
+            <div class="a-desc">SPKLU baru tidak mempengaruhi adopsi EV di control</div>
+          </div>
+          <div class="assumption">
+            <div class="a-title">Stable Composition</div>
+            <div class="a-desc">Karakteristik kabupaten stabil sepanjang periode</div>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="didChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PANEL 4 ============ -->
+  <div class="panel" id="panel4">
+    <div class="panel-grid">
+      <div class="panel-left">
+        <h2>Di <em>mana</em> SPKLU berikutnya harus dibangun?</h2>
+        <p class="lead">
+          Composite scorer menggabungkan 4 dimensi: defisit aksesibilitas, intensitas demand, gap equity, dan kesiapan grid.
+          Filter berdasarkan tipologi kabupaten untuk rekomendasi yang lebih operasional.
+        </p>
+        <div class="source-cite">
+          <strong>Status:</strong> Illustrative ranking<br>
+          Bobot komposit <em>akan dikalibrasi</em> dengan data Y1
+        </div>
+        <div class="takeaway">
+          <strong>Stakeholder yang dilayani</strong>
+          PLN ICON+ (operasional), Pemda (perencanaan tata ruang), investor swasta (peta peluang demand), Kementerian ESDM (alokasi subsidi).
+        </div>
+      </div>
+      <div class="panel-right">
+        <div class="vis-title">
+          <span>Top 10 kabupaten prioritas</span>
+          <span class="meta">Pilih kategori untuk filter</span>
+        </div>
+        <div class="reco-wrap">
+          <div class="cat-tabs">
+            <button class="cat-tab active" onclick="setCat('all')">Semua</button>
+            <button class="cat-tab" onclick="setCat('industrial')">Industri</button>
+            <button class="cat-tab" onclick="setCat('peri-urban')">Peri-Urban</button>
+            <button class="cat-tab" onclick="setCat('tourism')">Pariwisata</button>
+            <button class="cat-tab" onclick="setCat('transit')">Koridor Tol</button>
+          </div>
+          <div class="reco-list" id="recoList"></div>
+          <div class="formula">
+            score = 0.35 × accessibility_gap + 0.30 × demand_intensity + 0.25 × equity_gap + 0.10 × grid_readiness
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let didChartInstance = null;
+let mapInstance = null;
+let chartInitialized = false;
+
+function setTab(n) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i + 1 === n));
+  document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active', i + 1 === n));
+  if (n === 1) {
+    setTimeout(() => { initMap(); if (mapInstance) mapInstance.invalidateSize(); }, 80);
+  }
+  if (n === 3) {
+    setTimeout(() => { initChart(); if (didChartInstance) didChartInstance.resize(); }, 80);
+  }
+}
+
+// ============ DATA: 22 wilayah PLN ============
+// Sumber rasio: PT PLN EOI Figure 1, 2024
+// Sumber koordinat: BPS centroid + OpenStreetMap
+const wilayahPLN = [
+  { name: 'Aceh',         full: 'PLN UID Aceh',                      lat: 4.6951,  lng: 96.7494,  ratio: 1  },
+  { name: 'Sumut',        full: 'PLN UID Sumatera Utara',            lat: 2.1154,  lng: 99.5451,  ratio: 14 },
+  { name: 'Sumbar',       full: 'PLN UIW Sumatera Barat',            lat: -0.7399, lng: 100.8000, ratio: 2  },
+  { name: 'Riau',         full: 'PLN UIW Riau & Kepulauan Riau',     lat: 0.5333,  lng: 101.4500, ratio: 14 },
+  { name: 'S2JB',         full: 'PLN UIW Sumsel · Jambi · Bengkulu', lat: -2.9909, lng: 104.7565, ratio: 6  },
+  { name: 'Babel',        full: 'PLN UIW Bangka Belitung',           lat: -2.7411, lng: 106.4406, ratio: 1  },
+  { name: 'Lampung',      full: 'PLN UIW Lampung',                   lat: -4.5586, lng: 105.4068, ratio: 4  },
+  { name: 'Banten',       full: 'PLN UID Banten',                    lat: -6.4058, lng: 106.0640, ratio: 47 },
+  { name: 'Jakarta',      full: 'PLN UID Jakarta Raya',              lat: -6.2088, lng: 106.8456, ratio: 47 },
+  { name: 'Jabar',        full: 'PLN UID Jawa Barat',                lat: -6.9147, lng: 107.6098, ratio: 18 },
+  { name: 'Jateng-DIY',   full: 'PLN UID Jateng & DI Yogyakarta',    lat: -7.1500, lng: 110.1403, ratio: 11 },
+  { name: 'Jatim',        full: 'PLN UID Jawa Timur',                lat: -7.5360, lng: 112.2384, ratio: 14 },
+  { name: 'Bali',         full: 'PLN UID Bali',                      lat: -8.4095, lng: 115.1889, ratio: 12 },
+  { name: 'NTB',          full: 'PLN UIW Nusa Tenggara Barat',       lat: -8.6529, lng: 117.3616, ratio: 2  },
+  { name: 'NTT',          full: 'PLN UIW Nusa Tenggara Timur',       lat: -8.6574, lng: 121.0794, ratio: 1  },
+  { name: 'Kalbar',       full: 'PLN UIW Kalimantan Barat',          lat: -0.2787, lng: 111.4753, ratio: 5  },
+  { name: 'Kalselteng',   full: 'PLN UIW Kalsel & Kalteng',          lat: -1.6815, lng: 113.3824, ratio: 4  },
+  { name: 'Kaltimra',     full: 'PLN UIW Kaltim & Kaltara',          lat: 1.0000,  lng: 116.5000, ratio: 5  },
+  { name: 'Sulutenggo',   full: 'PLN UIW Sulut, Sulteng & Gorontalo',lat: 0.6246,  lng: 123.9750, ratio: 4  },
+  { name: 'Sulselrabar',  full: 'PLN UIW Sulsel · Sultra · Sulbar',  lat: -3.6687, lng: 119.9740, ratio: 9  },
+  { name: 'MMU',          full: 'PLN UIW Maluku & Maluku Utara',     lat: -2.0000, lng: 128.3000, ratio: 2  },
+  { name: 'P2B',          full: 'PLN UIW Papua & Papua Barat',       lat: -3.5000, lng: 138.0000, ratio: 3  },
+];
+
+function ratioColor(r) {
+  if (r >= 25) return '#c1432a';  // critical
+  if (r >= 12) return '#e07a55';  // high
+  if (r >= 5)  return '#f4d35e';  // mid
+  if (r >= 2)  return '#95c293';  // low
+  return '#4a8c5a';               // min
+}
+function ratioRadius(r) {
+  return 8 + Math.log2(r + 1) * 4;
+}
+
+// ============ INIT LEAFLET MAP (lazy) ============
+function initMap() {
+  if (mapInstance) return;
+  if (typeof L === 'undefined') {
+    document.getElementById('idMap').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#fafaf7;font-family:Inter,sans-serif;font-size:13px;text-align:center;padding:24px">Leaflet library failed to load.<br>Periksa koneksi internet untuk menampilkan peta satelit.</div>';
+    return;
+  }
+  try {
+    mapInstance = L.map('idMap', {
+      center: [-2.5, 118],
+      zoom: 5,
+      minZoom: 4,
+      maxZoom: 10,
+      zoomControl: true,
+      attributionControl: true,
+    });
+
+  // Primary: Esri World Imagery — high-res satellite, free, no API key required
+  const esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics',
+    maxZoom: 18,
+  });
+
+  // Labels overlay (place names) — Esri reference
+  const esriLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 18,
+    opacity: 0.85,
+  });
+
+  // Fallback: CartoDB voyager (street + labels) if satellite blocked
+  const cartoFallback = L.tileLayer('https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  });
+
+  esriSat.addTo(mapInstance);
+  esriLabels.addTo(mapInstance);
+
+  // Layer switcher
+  L.control.layers(
+    {
+      'Satelit (Esri)': esriSat,
+      'Peta (Carto)': cartoFallback,
+    },
+    null,
+    { position: 'topright', collapsed: true }
+  ).addTo(mapInstance);
+
+  // Add markers
+  wilayahPLN.forEach(w => {
+    const marker = L.circleMarker([w.lat, w.lng], {
+      radius: ratioRadius(w.ratio),
+      fillColor: ratioColor(w.ratio),
+      color: '#ffffff',
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.92
+    }).addTo(mapInstance);
+
+    marker.bindPopup(`
+      <div class="pop-name">${w.full}</div>
+      <div class="pop-ratio">1 : ${w.ratio}</div>
+      <div>Rasio EV per SPKLU</div>
+      <div class="pop-source">PLN EOI Figure 1, 2024</div>
+    `);
+
+    marker.bindTooltip(`<strong>${w.name}</strong> · 1:${w.ratio}`, {
+      direction: 'top',
+      offset: [0, -ratioRadius(w.ratio)]
+    });
+  });
+  } catch (err) {
+    console.error('Map init failed:', err);
+  }
+}
+
+// Init map immediately since panel 1 is default active
+setTimeout(initMap, 200);
+
+// ============ DiD CHART (lazy) ============
+function initChart() {
+  if (chartInitialized) return;
+  if (typeof Chart === 'undefined') {
+    const c = document.querySelector('#panel3 .chart-container');
+    if (c) c.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#6b7268;font-family:Inter,sans-serif;font-size:13px;text-align:center;padding:24px">Chart.js library failed to load.<br>Periksa koneksi internet untuk menampilkan grafik.</div>';
+    chartInitialized = true;
+    return;
+  }
+  chartInitialized = true;
+  try {
+    didChartInstance = new Chart(document.getElementById('didChart'), {
+      type: 'line',
+      data: {
+        labels: ['2020', '2021', '2022', '2023', '2024', '2025'],
+        datasets: [
+          {
+            label: 'Treated (≥3 SPKLU baru)',
+            data: [0.4, 0.7, 1.2, 2.1, 5.8, 9.2],
+            borderColor: '#0d3b22',
+            borderWidth: 3,
+            pointRadius: 4,
+            pointBackgroundColor: '#0d3b22',
+            tension: 0.3,
+            fill: false
+          },
+          {
+            label: 'Control (tanpa SPKLU baru)',
+            data: [0.3, 0.5, 0.9, 1.5, 2.3, 3.1],
+            borderColor: '#6b7268',
+            borderWidth: 2,
+            pointRadius: 4,
+            pointBackgroundColor: '#6b7268',
+            tension: 0.3,
+            fill: false
+          },
+          {
+            label: 'Counterfactual (tanpa intervensi)',
+            data: [0.4, 0.7, 1.2, 2.1, 3.0, 3.9],
+            borderColor: '#c1432a',
+            borderWidth: 2,
+            borderDash: [5, 4],
+            pointRadius: 0,
+            tension: 0.3,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { font: { family: 'Inter', size: 11 }, color: '#2a2f2c', boxWidth: 14, padding: 12 }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#6b7268' },
+            grid: { color: 'rgba(15,20,16,0.05)' }
+          },
+          y: {
+            title: { display: true, text: 'EV per 10.000 populasi', font: { family: 'Inter', size: 11 }, color: '#6b7268' },
+            ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#6b7268' },
+            grid: { color: 'rgba(15,20,16,0.05)' }
+          }
+        }
+      }
+    });
+  } catch (err) {
+    console.error('Chart init failed:', err);
+  }
+}
+
+// ============ RECOMMENDATIONS — Top 10 dengan kategori ============
+const recommendations = [
+  { rank: 1,  name: 'Bekasi',        prov: 'Jawa Barat',     cat: 'industrial', acc: 0.71, dem: 9.2, eq: 0.78, grid: 0.92, score: 94 },
+  { rank: 2,  name: 'Tangerang',     prov: 'Banten',         cat: 'peri-urban', acc: 0.68, dem: 8.7, eq: 0.81, grid: 0.89, score: 91 },
+  { rank: 3,  name: 'Sidoarjo',      prov: 'Jawa Timur',     cat: 'industrial', acc: 0.62, dem: 7.4, eq: 0.69, grid: 0.85, score: 86 },
+  { rank: 4,  name: 'Karawang',      prov: 'Jawa Barat',     cat: 'industrial', acc: 0.65, dem: 6.9, eq: 0.71, grid: 0.83, score: 84 },
+  { rank: 5,  name: 'Badung',        prov: 'Bali',           cat: 'tourism',    acc: 0.54, dem: 8.8, eq: 0.62, grid: 0.88, score: 82 },
+  { rank: 6,  name: 'Deli Serdang',  prov: 'Sumatera Utara', cat: 'peri-urban', acc: 0.59, dem: 6.1, eq: 0.74, grid: 0.78, score: 79 },
+  { rank: 7,  name: 'Semarang Kab.', prov: 'Jawa Tengah',    cat: 'industrial', acc: 0.57, dem: 6.3, eq: 0.66, grid: 0.81, score: 77 },
+  { rank: 8,  name: 'Cirebon',       prov: 'Jawa Barat',     cat: 'transit',    acc: 0.61, dem: 5.7, eq: 0.68, grid: 0.79, score: 76 },
+  { rank: 9,  name: 'Gianyar',       prov: 'Bali',           cat: 'tourism',    acc: 0.51, dem: 7.2, eq: 0.59, grid: 0.84, score: 74 },
+  { rank: 10, name: 'Tegal',         prov: 'Jawa Tengah',    cat: 'transit',    acc: 0.55, dem: 5.4, eq: 0.64, grid: 0.77, score: 71 },
+];
+
+const catLabels = {
+  industrial: 'industri',
+  'peri-urban': 'peri-urban',
+  tourism: 'pariwisata',
+  transit: 'koridor tol',
+};
+
+let currentCat = 'all';
+function renderReco() {
+  const list = document.getElementById('recoList');
+  const filtered = currentCat === 'all'
+    ? recommendations
+    : recommendations.filter(r => r.cat === currentCat);
+
+  list.innerHTML = `
+    <div class="reco-row head">
+      <div>#</div>
+      <div>Kabupaten</div>
+      <div>Acc gap</div>
+      <div>Demand</div>
+      <div>Equity</div>
+      <div>Grid</div>
+      <div style="text-align:right">Skor</div>
+    </div>
+    ${filtered.map(r => `
+      <div class="reco-row">
+        <div class="rank">${String(r.rank).padStart(2, '0')}</div>
+        <div class="place">${r.name}<small>${r.prov} · ${catLabels[r.cat]}</small></div>
+        <div class="metric">${r.acc.toFixed(2)}</div>
+        <div class="metric">${r.dem.toFixed(1)}</div>
+        <div class="metric">${r.eq.toFixed(2)}</div>
+        <div class="metric">${r.grid.toFixed(2)}</div>
+        <div class="score">${r.score}</div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function setCat(cat) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-tab').forEach(t => {
+    t.classList.toggle('active', t.textContent.toLowerCase() === (cat === 'all' ? 'semua' : (catLabels[cat] === 'koridor tol' ? 'koridor tol' : catLabels[cat])));
+  });
+  // Simpler: match by index
+  const cats = ['all', 'industrial', 'peri-urban', 'tourism', 'transit'];
+  document.querySelectorAll('.cat-tab').forEach((t, i) => {
+    t.classList.toggle('active', cats[i] === cat);
+  });
+  renderReco();
+}
+renderReco();
+</script>
+
+</body>
+</html>
